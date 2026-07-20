@@ -5631,6 +5631,15 @@ $scope.EliminarTotalFacturaSelect=function(id_ingresofactura){
 			// Forzar tipo de factura electrónica (2)
 			$scope.tipo_factura_actual = 2;
 			
+			console.log('📤 ENVIANDO a insertarfacturaElectronica:');
+			console.log('   id_cliente:', insertClientes.id_cliente, 'nombre:', insertClientes.nombre_clientes);
+			console.log('   totalpago:', $scope.totalapagar);
+			console.log('   totalganancia:', $scope.totalganacia);
+			console.log('   Pagocambio:', cambioFacturaDinero.Pagocambio);
+			console.log('   cambio:', cambioFacturaDinero.cambio);
+			console.log('   descuento:', cambioFacturaDinero.descuento);
+			console.log('   tipopago:', cambioFacturaDinero.tipoPago);
+			
 			$http.post("app/operaciones/operaciones.php?variable=facturar&operacion=insertarfacturaElectronica",
 			{
 				'id_cliente':insertClientes.id_cliente,
@@ -5645,7 +5654,37 @@ $scope.EliminarTotalFacturaSelect=function(id_ingresofactura){
 			})
 			.success(function (datos)
 			{		
+				console.log('✅ RESPUESTA insertarfacturaElectronica:', JSON.stringify(datos));
 				
+				// Validar si el PHP devolvió un error (success: false)
+				if (datos && datos.success === false) {
+					console.log('❌ ERROR del servidor:', datos);
+					console.log('   step:', datos.step);
+					console.log('   message:', datos.message);
+					if (datos.datos_recibidos) console.log('   datos_recibidos:', JSON.stringify(datos.datos_recibidos));
+					if (datos.cliente) console.log('   cliente:', JSON.stringify(datos.cliente));
+					new PNotify({
+						title: 'Error',
+						text: datos.message || 'Error al crear la factura electrónica',
+						type: 'error',
+						styling: 'bootstrap3'
+					});
+					return;
+				}
+				
+				// Validar si el PHP devolvió un mensaje de error en texto
+				if (typeof datos === 'string' && (datos.indexOf('error:') !== -1 || datos.indexOf('fallo') !== -1)) {
+					console.log('❌ ERROR texto del servidor:', datos);
+					new PNotify({
+						title: 'Error',
+						text: datos,
+						type: 'error',
+						styling: 'bootstrap3'
+					});
+					return;
+				}
+				
+				console.log('✅ ID_FACTURA recibido:', datos, 'tipo:', typeof datos);
 				var id_factura = datos;
 				
 				// var descuentoDividido=cambioFacturaDinero.descuento/$scope.listaProductosDetalleFactura.length;
@@ -5827,14 +5866,23 @@ $scope.EliminarTotalFacturaSelect=function(id_ingresofactura){
 
 			}).error(function(datos, status, headers, config)
 			{
-			//	console.log("echo todo mal");
-				/* 	new PNotify({
-										title: 'Error!',
-										text: 'Ha ocurrido un error de funcion guardarFactura',
-										type: 'error',
-										styling: 'bootstrap3'
-									});
-									*/
+				console.log('❌ ERROR HTTP insertarfacturaElectronica - status:', status);
+				console.log('   datos:', datos);
+				console.log('   typeof datos:', typeof datos);
+				try {
+					var errorObj = typeof datos === 'string' ? JSON.parse(datos) : datos;
+					console.log('   mensaje:', errorObj.message || 'Sin mensaje');
+					console.log('   step:', errorObj.step || 'N/A');
+					if (errorObj.datos_recibidos) console.log('   datos_recibidos:', JSON.stringify(errorObj.datos_recibidos));
+				} catch(e) {
+					console.log('   respuesta texto:', datos);
+				}
+				new PNotify({
+					title: 'Error al crear factura',
+					text: 'Error del servidor (código ' + status + '). Revisa la consola (F12) para más detalles.',
+					type: 'error',
+					styling: 'bootstrap3'
+				});
 			});
 
 			$http.post("app/operaciones/operaciones.php?variable=facturar&operacion=ultimaFacturaF")

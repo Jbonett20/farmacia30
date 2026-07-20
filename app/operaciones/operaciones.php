@@ -2200,8 +2200,14 @@ if ($variable == 'ingresos') {
 		$requestBody = file_get_contents("php://input");
 		$datos = json_decode($requestBody, true); // Decodificar como array
 		
-		file_put_contents('/tmp/debug_factura.log', "\n=== insertarfacturaElectronica ===\n", FILE_APPEND);
-		file_put_contents('/tmp/debug_factura.log', "REQUEST: $requestBody\n", FILE_APPEND);
+		$logMsg = "\n=== insertarfacturaElectronica ===\nREQUEST: $requestBody\n";
+		file_put_contents('C:\\xampp\\htdocs\\misproyectos\\jader\\debug_factura.log', $logMsg, FILE_APPEND);
+		
+		// Log detallado de cada campo
+		file_put_contents('C:\\xampp\\htdocs\\misproyectos\\jader\\debug_factura.log', "id_cliente: " . ($datos['id_cliente'] ?? 'NULL') . " (tipo: " . gettype($datos['id_cliente'] ?? null) . ")\n", FILE_APPEND);
+		file_put_contents('C:\\xampp\\htdocs\\misproyectos\\jader\\debug_factura.log', "totalpago: " . ($datos['totalpago'] ?? 'NULL') . " (tipo: " . gettype($datos['totalpago'] ?? null) . ")\n", FILE_APPEND);
+		file_put_contents('C:\\xampp\\htdocs\\misproyectos\\jader\\debug_factura.log', "pagoCambio: " . ($datos['pagoCambio'] ?? 'NULL') . "\n", FILE_APPEND);
+		file_put_contents('C:\\xampp\\htdocs\\misproyectos\\jader\\debug_factura.log', "tipopago: " . ($datos['tipopago'] ?? 'NULL') . "\n", FILE_APPEND);
 		
 		$id_cliente = $datos['id_cliente'] ?? null;
 		$totalpago = $datos['totalpago'] ?? null;
@@ -2213,7 +2219,8 @@ if ($variable == 'ingresos') {
 		$tipo_factura = 2; // Siempre es factura electrónica
 		
 		// Validar que los datos obligatorios no sean null o vacíos
-		if (!$id_cliente || !$totalpago || $totalpago === '' || $id_cliente === '') {
+		if ($id_cliente === null || $id_cliente === '' || $totalpago === null || $totalpago === '') {
+			file_put_contents('C:\\xampp\\htdocs\\misproyectos\\jader\\debug_factura.log', "❌ VALIDACIÓN FALLÓ: id_cliente=$id_cliente, totalpago=$totalpago\n", FILE_APPEND);
 			http_response_code(400);
 			echo json_encode([
 				"success" => false,
@@ -3541,7 +3548,7 @@ if ($variable == "producto") {
 		$requestBody = file_get_contents("php://input");
 		$datos = json_decode($requestBody, true);
 		$barra = $datos['barra'];
-		$sql_listadoProducto = mysqli_query($link,"SELECT inv.*,p.valor_venta*i.iva/100 as ivaValor, p.*,c.*,i.*,pro.* FROM tbl_producto p, tbl_categoria c, tbl_iva i,tbl_proveedor pro, tbl_inventario inv WHERE p.id_categoria=c.id_categoria and i.id_iva=p.id_iva and pro.id_proveedor=p.id_proveedor and inv.id_producto=p.id_producto and p.codigo_barras='$barra' or p.codigo_barrasUno='$barra' or p.codigo_barrasDos='$barra'");
+		$sql_listadoProducto = mysqli_query($link,"SELECT inv.*,p.valor_venta*i.iva/100 as ivaValor, p.*,c.*,i.*,pro.* FROM tbl_producto p, tbl_categoria c, tbl_iva i,tbl_proveedor pro, tbl_inventario inv WHERE p.id_categoria=c.id_categoria and i.id_iva=p.id_iva and pro.id_proveedor=p.id_proveedor and inv.id_producto=p.id_producto and (p.codigo_barras='$barra' or p.codigo_barrasUno='$barra' or p.codigo_barrasDos='$barra')");
 		$rows = [];
 		while ($respuesta = mysqli_fetch_assoc($sql_listadoProducto)) {
 			$rows[] = $respuesta;
@@ -3567,7 +3574,7 @@ if ($variable == "producto") {
 		$requestBody = file_get_contents("php://input");
 		$datos = json_decode($requestBody, true);
 		$codigo = $datos['codigo'];
-		$sql_listadoProducto = mysqli_query($link,"SELECT p.valor_venta*i.iva/100 as ivaValor, p.*,c.*,i.*,pro.* FROM tbl_producto p, tbl_categoria c, tbl_iva i,tbl_proveedor pro WHERE p.id_categoria=c.id_categoria and i.id_iva=p.id_iva and pro.id_proveedor=p.id_proveedor and p.codigo_producto='$codigo' ");
+		$sql_listadoProducto = mysqli_query($link,"SELECT p.valor_venta*i.iva/100 as ivaValor, p.*,c.*,i.*,pro.* FROM tbl_producto p, tbl_categoria c, tbl_iva i,tbl_proveedor pro WHERE p.id_categoria=c.id_categoria and i.id_iva=p.id_iva and pro.id_proveedor=p.id_proveedor and (p.codigo_producto='$codigo' or p.codigo_barras='$codigo' or p.codigo_barrasUno='$codigo' or p.codigo_barrasDos='$codigo')");
 		$rows = [];
 		while ($respuesta = mysqli_fetch_assoc($sql_listadoProducto)) {
 			$rows[] = $respuesta;
