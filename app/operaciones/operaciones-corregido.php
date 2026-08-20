@@ -3113,7 +3113,7 @@ if ($variable == "producto") {
 
 		$datos = json_decode(file_get_contents("php://input"));
 		$barra = $datos->barra;
-		$sql_listadoProducto = mysqli_query ($link, "SELECT inv.*,p.valor_venta*i.iva/100 as ivaValor, p.*,c.*,i.*,pro.* FROM tbl_producto p, tbl_categoria c, tbl_iva i,tbl_proveedor pro, tbl_inventario inv WHERE p.id_categoria=c.id_categoria and i.id_iva=p.id_iva and pro.id_proveedor=p.id_proveedor and inv.id_producto=p.id_producto and p.codigo_barras='$barra' or p.codigo_barrasUno='$barra' or p.codigo_barrasDos='$barra'" );
+		$sql_listadoProducto = mysqli_query ($link, "SELECT inv.*,p.valor_venta*i.iva/100 as ivaValor, p.*,c.*,i.*,pro.* FROM tbl_producto p, tbl_categoria c, tbl_iva i,tbl_proveedor pro, tbl_inventario inv WHERE p.id_categoria=c.id_categoria and i.id_iva=p.id_iva and pro.id_proveedor=p.id_proveedor and inv.id_producto=p.id_producto and (p.codigo_barras='$barra' or p.codigo_barrasUno='$barra' or p.codigo_barrasDos='$barra')" );
 		$rows = array();
 		while ($respuesta = mysqli_fetch_assoc($sql_listadoProducto)) {
 			$rows[] = $respuesta;
@@ -3137,7 +3137,7 @@ if ($variable == "producto") {
 
 		$datos = json_decode(file_get_contents("php://input"));
 		$codigo = $datos->codigo;
-		$sql_listadoProducto = mysqli_query ($link, "SELECT p.valor_venta*i.iva/100 as ivaValor, p.*,c.*,i.*,pro.* FROM tbl_producto p, tbl_categoria c, tbl_iva i,tbl_proveedor pro WHERE p.id_categoria=c.id_categoria and i.id_iva=p.id_iva and pro.id_proveedor=p.id_proveedor and p.codigo_producto='$codigo' " );
+		$sql_listadoProducto = mysqli_query ($link, "SELECT p.valor_venta*i.iva/100 as ivaValor, p.*,c.*,i.*,pro.* FROM tbl_producto p, tbl_categoria c, tbl_iva i,tbl_proveedor pro WHERE p.id_categoria=c.id_categoria and i.id_iva=p.id_iva and pro.id_proveedor=p.id_proveedor and (p.codigo_producto='$codigo' or p.codigo_barras='$codigo' or p.codigo_barrasUno='$codigo' or p.codigo_barrasDos='$codigo')" );
 		$rows = array();
 		while ($respuesta = mysqli_fetch_assoc($sql_listadoProducto)) {
 			$rows[] = $respuesta;

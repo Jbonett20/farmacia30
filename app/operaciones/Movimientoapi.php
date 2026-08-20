@@ -80,7 +80,7 @@ if ($row_factura['tipo_factura'] != 2) {
 }
 
 //obtener datos detalle factura
-$sql_query = "SELECT f.*,p.codigo_producto,p.descripcion,p.presentacion,p.valor,p.valor_unidad,i.iva FROM tbl_detallefactura as f left join tbl_producto as p on p.id_producto=f.id_producto left join tbl_iva as i on i.id_iva=p.id_iva where f.id_factura='$idFact'";
+$sql_query = "SELECT f.*,p.codigo_producto,p.descripcion,p.presentacion,p.valor,p.valor_venta,p.valor_unidad,i.iva FROM tbl_detallefactura as f left join tbl_producto as p on p.id_producto=f.id_producto left join tbl_iva as i on i.id_iva=p.id_iva where f.id_factura='$idFact'";
 error_log("SQL Query: " . $sql_query);
 @file_put_contents($logFile, "SQL Query: $sql_query\n", FILE_APPEND);
 $sql_det_factura = mysqli_query($link, $sql_query);
@@ -195,9 +195,12 @@ while ($row_det_factura = mysqli_fetch_array($sql_det_factura)) {
         $cantidadLinea = floatval($row_det_factura['cantidad'] ?? 0);
     }
 
-    $precioUnitario = floatval($row_det_factura['valor_unidad'] ?? 0);
-    if ($precioUnitario <= 0 && $cantidadLinea > 0) {
+    // Calcular precio unitario desde el total real almacenado en el detalle de factura
+    // Usamos total_pago / cantidad para usar el precio REAL al que se vendió, no el actual del producto
+    if ($cantidadLinea > 0) {
         $precioUnitario = floatval($row_det_factura['total_pago'] ?? 0) / $cantidadLinea;
+    } else {
+        $precioUnitario = floatval($row_det_factura['valor_venta'] ?? $row_det_factura['valor_unidad'] ?? 0);
     }
 
     $costoUnitario = floatval($row_det_factura['valor'] ?? 0);
