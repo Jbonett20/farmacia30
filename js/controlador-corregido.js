@@ -11565,6 +11565,13 @@ $scope.showVistaF.show = true;
          
         if (k == 13)
         {
+			// Si el valor es numérico y tiene 12+ dígitos, ya fue procesado 
+			// por listadotodos_ProductoChange (ng-change) como código de barras
+			if (elcodigoProd && /^\d{12,}$/.test(elcodigoProd)) {
+				$scope.busquedaProducto = "";
+				document.getElementById("search").value = "";
+				return;
+			}
 
         	separador = " ",
 			limite    = 2,
